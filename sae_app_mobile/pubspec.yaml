@@ -34,6 +34,7 @@ dependencies:
   path_provider: ^2.1.2
   sqflite_common_ffi: ^2.3.0  # Pour Desktop (Windows/macOS/Linux)
   sqflite_common_ffi_web: ^0.4.0 # pour le web
+  image_picker: ^1.1.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
