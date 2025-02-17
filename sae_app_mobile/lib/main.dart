@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/take_photo_page.dart';
+import 'pages/camera_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/history_page.dart';
 

@@ -1,0 +1,1 @@
+// Widget d'une carte de plante (pour l'historique)
