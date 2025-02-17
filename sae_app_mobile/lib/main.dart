@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'pages/camera_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/history_page.dart';
-
-void main() {
-  runApp(MyApp());
+import 'package:flutter_dotenv/flutter_dotenv.dart'; 
+void main() async {
+  try {
+    runApp(MyApp());
+  } catch (e) {
+    print("Erreur lors de l'initialisation: $e");
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -15,10 +19,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: HomePage(), // La page d'accueil
     );
   }
 }
+
 
 class HomePage extends StatefulWidget {
   @override
@@ -31,7 +36,7 @@ class _HomePageState extends State<HomePage> {
   // Liste des pages de l'application (sans 'const')
   static List<Widget> _pages = <Widget>[
     HistoryPage(),
-    TakePhotoPage(),  
+    Camera(),  
     SettingsPage(),
 
   ];

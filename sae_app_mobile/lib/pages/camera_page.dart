@@ -1,69 +1,92 @@
-import 'dart:io'; // Pour Android/iOS
-import 'dart:typed_data'; // Pour gérer les bytes de l'image
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/foundation.dart'; // Pour kIsWeb
+import '../services/api_service.dart';
+import 'result_page.dart';
 
-class TakePhotoPage extends StatefulWidget {
-  const TakePhotoPage({Key? key}) : super(key: key);
+class Camera extends StatefulWidget {
+  const Camera({Key? key}) : super(key: key);
 
   @override
-  _TakePhotoPageState createState() => _TakePhotoPageState();
+  _CameraState createState() => _CameraState();
 }
 
-class _TakePhotoPageState extends State<TakePhotoPage> {
+class _CameraState extends State<Camera> {
   File? _imageFile;
-  Uint8List? _webImage; // Stocke les bytes de l'image sur Web
-  final ImagePicker _picker = ImagePicker();
+  final CameraService _cameraService = CameraService();
 
+  // Prendre une photo et l'afficher
   Future<void> _takePhoto() async {
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("La caméra n'est pas supportée sur le Web")),
-      );
-      return;
-    }
-
-    final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+    File? photo = await _cameraService.takePhoto();
     if (photo != null) {
       setState(() {
-        _imageFile = File(photo.path);
+        _imageFile = photo;
       });
     }
   }
 
+  // Sélectionner une image depuis la galerie
   Future<void> _pickImageFromGallery() async {
-    final XFile? photo = await _picker.pickImage(source: ImageSource.gallery);
+    File? photo = await _cameraService.pickImageFromGallery();
     if (photo != null) {
-      if (kIsWeb) {
-        // Sur Web, convertit l'image en bytes
-        final bytes = await photo.readAsBytes();
-        setState(() {
-          _webImage = bytes;
-        });
+      setState(() {
+        _imageFile = photo;
+      });
+    }
+  }
+
+  // Envoyer l'image à l'API et afficher les résultats
+  Future<void> _uploadPhoto() async {
+    if (_imageFile != null) {
+      var resultData = await _cameraService.uploadPhoto(
+        _imageFile!, 48.289919, 6.941942,
+      );
+      if (resultData != null) {
+        // Navigation vers la page de résultats avec les données récupérées
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => ResultPage(
+              imageUrl: resultData['imageUrl'],
+              name: resultData['name'],
+              probability: resultData['probability'],
+              latitude: resultData['latitude'],
+              longitude: resultData['longitude'],
+              similarImages: List<String>.from(resultData['similarImages']),
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOut;
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              var offsetAnimation = animation.drive(tween);
+
+              return SlideTransition(position: offsetAnimation, child: child);
+            },
+          ),
+        );
       } else {
-        setState(() {
-          _imageFile = File(photo.path);
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Erreur lors de l'envoi de la photo")),
+        );
       }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Aucune photo sélectionnée")),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Prendre une photo'),
-      ),
+      appBar: AppBar(title: const Text('Prendre une photo')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _imageFile == null && _webImage == null
+            _imageFile == null
                 ? const Text('Aucune image sélectionnée.')
-                : kIsWeb
-                    ? Image.memory(_webImage!, width: 300, height: 300, fit: BoxFit.cover) // Web
-                    : Image.file(_imageFile!, width: 300, height: 300, fit: BoxFit.cover), // Mobile
+                : Image.file(_imageFile!, width: 300, height: 300, fit: BoxFit.cover),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _takePhoto,
@@ -73,6 +96,11 @@ class _TakePhotoPageState extends State<TakePhotoPage> {
             ElevatedButton(
               onPressed: _pickImageFromGallery,
               child: const Text('Sélectionner depuis la galerie'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _uploadPhoto,
+              child: const Text('Envoyer la photo'),
             ),
           ],
         ),
