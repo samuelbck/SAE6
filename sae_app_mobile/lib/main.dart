@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'database_helper.dart';
-import 'package:flutter/material.dart';
 import 'pages/take_photo_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/history_page.dart';
@@ -13,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Navigation Exemple',
+      title: 'Application',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -28,13 +26,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
 
-  // Liste des pages de l'application, maintenant marquées comme constantes
-  static const List<Widget> _pages = <Widget>[
-    TakePhotoPage(),
-    SettingsPage(),
+  // Liste des pages de l'application (sans 'const')
+  static List<Widget> _pages = <Widget>[
     HistoryPage(),
+    TakePhotoPage(),  
+    SettingsPage(),
+
   ];
 
   void _onItemTapped(int index) {
@@ -57,16 +56,16 @@ class _HomePageState extends State<HomePage> {
         onTap: _onItemTapped,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Historique',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.camera_alt),
-            label: 'Take Photo',
+            label: 'Photo',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Paramètres',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Historique',
+            label: 'Paramètre',
           ),
         ],
       ),
