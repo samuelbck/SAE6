@@ -19,6 +19,12 @@ class ResultPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Gestion du mode sombre
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    Color cardColor = isDarkMode ? Colors.grey[900]! : Colors.white;
+    Color textColor = isDarkMode ? Colors.white : Colors.black;
+    Color subtitleColor = isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Résultat de la prédiction"),
@@ -28,34 +34,100 @@ class ResultPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // Image de la plante
-            Image.network(imageUrl, width: 300, height: 300, fit: BoxFit.cover),
-            const SizedBox(height: 20),
-
-            // Nom de la plante
-            Text(
-              name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            // Image de la plante avec carte
+            Card(
+              margin: const EdgeInsets.only(bottom: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+              color: cardColor,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Transform.rotate(
+                  angle: 90 * 3.1415927 / 180, // Rotation de 90 degrés dans le sens des aiguilles d'une montre
+                  child: Image.network(
+                    imageUrl,
+                    width: double.infinity,
+                    height: 250,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 10),
 
-            // Affichage de la probabilité
-            Text("Probabilité: ${(probability * 100).toStringAsFixed(2)}%"),
-            const SizedBox(height: 10),
+            // Nom de la plante avec style
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+              color: cardColor,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Probabilité: ${(probability * 100).toStringAsFixed(2)}%",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.green,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Latitude: $latitude",
+                      style: TextStyle(fontSize: 14, color: subtitleColor),
+                    ),
+                    Text(
+                      "Longitude: $longitude",
+                      style: TextStyle(fontSize: 14, color: subtitleColor),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
-            // Affichage de la latitude et de la longitude
-            Text("Latitude: $latitude"),
-            Text("Longitude: $longitude"),
             const SizedBox(height: 20),
 
             // Liste des images similaires
-            Text("Images similaires:"),
-            const SizedBox(height: 10),
-            for (var img in similarImages)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Image.network(img, width: 100, height: 100, fit: BoxFit.cover),
+            Text(
+              "Images similaires:",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
               ),
+            ),
+            const SizedBox(height: 10),
+
+            // Affichage des images similaires dans un Row
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (var img in similarImages)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      img,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
