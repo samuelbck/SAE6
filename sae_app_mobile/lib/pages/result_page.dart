@@ -111,23 +111,60 @@ class ResultPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
-            // Affichage des images similaires dans un Row
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (var img in similarImages)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      img,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
+                Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (var img in similarImages)
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return Dialog(
+                              backgroundColor: Colors.transparent, // Pour fond transparent
+                              child: Stack(
+                                children: [
+                                  // Image agrandie
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      img,
+                                      width: MediaQuery.of(context).size.width * 0.9,
+                                      height: MediaQuery.of(context).size.height * 0.7,
+                                      fit: BoxFit.contain, // Pour voir toute l’image sans déformation
+                                    ),
+                                  ),
+                                  
+                                  // Bouton de fermeture
+                                  Positioned(
+                                    top: 10,
+                                    right: 10,
+                                    child: IconButton(
+                                      icon: Icon(Icons.close, color: Colors.white, size: 30),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          img,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),
