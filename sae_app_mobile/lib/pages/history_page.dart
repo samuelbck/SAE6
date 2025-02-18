@@ -22,6 +22,13 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> _loadHistorique() async {
     DatabaseService dbService = DatabaseService();
     List<Map<String, dynamic>> historique = await dbService.getAllHistorique();
+
+    historique.sort((a, b) {
+      DateTime dateA = DateTime.parse(a['timestamp']);
+      DateTime dateB = DateTime.parse(b['timestamp']);
+      return dateB.compareTo(dateA);
+    });
+    
     setState(() {
       _historique = historique;
     });
