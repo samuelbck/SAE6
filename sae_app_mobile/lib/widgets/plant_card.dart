@@ -40,7 +40,7 @@ class PlantCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              flex: 1,
+              flex: 2,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.memory(
@@ -52,7 +52,7 @@ class PlantCard extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Expanded(
-              flex: 1,
+              flex: 2,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -79,6 +79,10 @@ class PlantCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: isDarkMode ? Colors.white : Colors.black,
             ),
           ],
         ),
