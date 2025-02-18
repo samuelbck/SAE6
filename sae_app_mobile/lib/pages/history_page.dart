@@ -39,6 +39,7 @@ class _HistoryPageState extends State<HistoryPage> {
           return PlantCard(
             name: item['name'],
             image: item['image'],
+            prediction: item['prediction_score'],
             timestamp: item['timestamp'],
           );
         },
