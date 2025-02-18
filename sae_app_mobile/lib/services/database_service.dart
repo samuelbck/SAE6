@@ -100,6 +100,20 @@ class DatabaseService {
   }
   }
 
+  Future<void> deleteAll() async {
+    try {
+      Database? db = await database;
+
+      if (db == null) {
+        throw Exception("Database is not initialized.");
+      }
+
+      await db.delete('historique');
+    } catch (e) {
+      print("Erreur lors de la suppression de tous les éléments : $e");
+    }
+  }
+
   Future<void> insert(String table, Map<String, dynamic> data) async {
   try {
     final db = await database;
