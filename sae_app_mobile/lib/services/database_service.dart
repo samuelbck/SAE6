@@ -59,7 +59,7 @@ class DatabaseService {
 
   Future<void> _insertInitialData(Database db) async {
     // Image encodée en Base64 pour l'exemple
-    String base64Image = 'UA';
+    String base64Image = 'Ukl';
 
     final Uint8List imageBytes = base64Decode(base64Image);
 
@@ -82,11 +82,28 @@ class DatabaseService {
     return await db!.query('historique');
   }
 
+  Future<void> deleteHistorique(int id) async {
+    try {
+    Database? db = await database;
+
+    if (db == null) {
+      throw Exception("Database is not initialized.");
+    }
+
+    await db.delete(
+      'historique',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  } catch (e) {
+    print("Erreur lors de la suppression de l'élément avec l'id $id : $e");
+  }
+  }
+
   Future<void> insert(String table, Map<String, dynamic> data) async {
   try {
     final db = await database;
 
-    // Null check before proceeding
     if (db == null) {
       throw Exception("Database is not initialized.");
     }
@@ -101,10 +118,11 @@ class DatabaseService {
       data,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    print("Données insérées avec succès !");
   } catch (e) {
     print("Erreur lors de l'insertion en BDD : $e");
   }
+
+  
 }
 
 }
