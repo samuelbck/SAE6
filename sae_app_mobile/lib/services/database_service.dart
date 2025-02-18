@@ -28,8 +28,8 @@ class DatabaseService {
       dbPath = await getDatabasesPath(); 
 
     } else {
-      String path = await getDatabasesPath(); // chemin pour IOS
-      dbPath = join(path, 'historique.db');
+      String path = await getDatabasesPath(); 
+      dbPath = join(path, 'historique.db');// chemin pour IOS
     }
     return await openDatabase(
         dbPath,

@@ -2,45 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/database_service.dart';
 import '../widgets/plant_card.dart';
+import 'package:flutter/material.dart';
 
 class HistoryPage extends StatefulWidget {
-  const HistoryPage({Key? key}) : super(key: key);
-
   @override
   _HistoryPageState createState() => _HistoryPageState();
 }
 
 class _HistoryPageState extends State<HistoryPage> {
   List<Map<String, dynamic>> _historique = [];
+  List<Map<String, dynamic>> _filteredHistorique = [];
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadHistorique();
+    _searchController.addListener(_filterHistorique);
   }
 
   Future<void> _loadHistorique() async {
     DatabaseService dbService = DatabaseService();
     List<Map<String, dynamic>> historique = await dbService.getAllHistorique();
 
-    historique.sort((a, b) {
+    List<Map<String, dynamic>> modifiableHistorique = List.from(historique);
+
+    modifiableHistorique.sort((a, b) {
       DateTime dateA = DateTime.parse(a['timestamp']);
       DateTime dateB = DateTime.parse(b['timestamp']);
       return dateB.compareTo(dateA);
     });
-    
+
     setState(() {
-      _historique = historique;
+      _historique = modifiableHistorique;
+      _filteredHistorique = modifiableHistorique;
     });
   }
 
-  Future<void> _deleteItem(int id) async {
+  void _filterHistorique() {
+    String query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredHistorique = _historique
+          .where((item) => item['name'].toLowerCase().contains(query))
+          .toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+   Future<void> _deleteItem(int id) async {
     DatabaseService dbService = DatabaseService();
     await dbService.deleteHistorique(id);
     _loadHistorique();
   }
 
-  void _showDetailsDialog(Map<String, dynamic> item) {
+   void _showDetailsDialog(Map<String, dynamic> item) {
   DateTime dateTime = DateTime.parse(item['timestamp']);
   String formattedDate = DateFormat('dd/MM/yyyy').format(dateTime);
   String formattedTime = DateFormat('HH:mm').format(dateTime);
@@ -112,27 +132,49 @@ class _HistoryPageState extends State<HistoryPage> {
     },
   );
 }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historique des scans'),
       ),
-      body: ListView.builder(
-        itemCount: _historique.length,
-        itemBuilder: (context, index) {
-          var item = _historique[index];
-          return GestureDetector(
-            onTap: () => _showDetailsDialog(item),
-            child: PlantCard(
-              name: item['name'],
-              image: item['image'],
-              prediction: item['prediction_score'],
-              timestamp: item['timestamp'],
+      body: Column(
+        children: [
+          // Barre de recherche
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: "Rechercher...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+              ),
             ),
-          );
-        },
+          ),
+
+          // Liste des résultats filtrés
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredHistorique.length,
+              itemBuilder: (context, index) {
+                var item = _filteredHistorique[index];
+                return GestureDetector(
+                  onTap: () => _showDetailsDialog(item),
+                  child: PlantCard(
+                    name: item['name'],
+                    image: item['image'],
+                    prediction: item['prediction_score'],
+                    timestamp: item['timestamp'],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
