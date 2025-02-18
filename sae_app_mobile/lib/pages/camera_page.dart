@@ -64,6 +64,7 @@ class _CameraState extends State<Camera> {
             },
           ),
         );
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Erreur lors de l'envoi de la photo")),

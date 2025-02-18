@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
+import '../services/database_service.dart';
+import 'dart:typed_data';
+import 'package:sqflite/sqflite.dart';
 
 class CameraService {
   final ImagePicker _picker = ImagePicker();
-  final String apiUrl = "https://plant.id/api/v3/identification"; // Remplace par l'URL de ton API
-  final String apiKey = "QMHLctcWYAUYC8MIDQTJEauRhuUQoEABoBaxvLhtfPGXD1VSOA"; // Utilisation de la clé API depuis .env
+  final String apiUrl = "https://plant.id/api/v3/identification"; 
+  final String apiKey = "QMHLctcWYAUYC8MIDQTJEauRhuUQoEABoBaxvLhtfPGXD1VSOA"; 
 
   // Prendre une photo avec la caméra
   Future<File?> takePhoto() async {
@@ -22,13 +24,13 @@ class CameraService {
     return photo != null ? File(photo.path) : null;
   }
 
-  // Convertir l'image en base64
+
   Future<String> encodeImageToBase64(File image) async {
     List<int> imageBytes = await image.readAsBytes();
     return base64Encode(imageBytes);
   }
 
-  // Envoyer la photo à l'API et renvoyer les données nécessaires à la page des résultats
+  //API Plant.io
   Future<Map<String, dynamic>?> uploadPhoto(File photo, double latitude, double longitude) async {
     try {
       String base64Image = await encodeImageToBase64(photo);
@@ -51,10 +53,8 @@ class CameraService {
       );
 
       if (response.statusCode == 201) {
-        // La réponse de l'API est un succès, nous extrayons les données nécessaires
         var responseData = jsonDecode(response.body);
 
-        // Extraire les informations pertinentes
         var resultData = {
           "imageUrl": responseData['input']['images'][0],
           "name": responseData['result']['classification']['suggestions'][0]['name'],
@@ -63,6 +63,23 @@ class CameraService {
           "longitude": longitude,
           "similarImages": List<String>.from(responseData['result']['classification']['suggestions'][0]['similar_images'].map((image) => image['url'])),
         };
+
+      DatabaseService dbService = DatabaseService();
+
+      final Uint8List imageBytes = await photo.readAsBytes();
+
+      await dbService.insert(
+        'historique',
+        {
+          'name': resultData['name'],
+          'latitude': latitude,
+          'longitude': longitude,
+          'prediction_score': (resultData['probability'] * 100).toDouble(),
+          'image': imageBytes,  // Pass the image as Uint8List
+          'url': resultData['imageUrl'],
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
 
         return resultData;
       } else {
