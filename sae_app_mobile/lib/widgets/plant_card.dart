@@ -27,6 +27,7 @@ class PlantCard extends StatelessWidget {
     Color cardColor = isDarkMode ? Colors.grey[900]! : Colors.white;
     Color textColor = isDarkMode ? Colors.white : Colors.black;
     Color subtitleColor = isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
+    Color predictionColor = prediction < 50 ? Colors.redAccent : Colors.green;
 
     return Card(
       margin: const EdgeInsets.all(10),
@@ -68,7 +69,7 @@ class PlantCard extends StatelessWidget {
                     '$prediction% de confiance',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.green,
+                      color: predictionColor,
                     ),
                   ),
                   const SizedBox(height: 5),
