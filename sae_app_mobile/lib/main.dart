@@ -3,29 +3,78 @@ import 'pages/camera_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/history_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
 void main() async {
-  try {
-    runApp(MyApp());
-  } catch (e) {
-    print("Erreur lors de l'initialisation: $e");
-  }
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final isDarkMode = prefs.getBool('isDarkMode') ?? false;
+  
+  runApp(MyApp(isDarkMode: isDarkMode));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  final bool isDarkMode;
+  
+  const MyApp({Key? key, required this.isDarkMode}) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+
+  static _MyAppState of(BuildContext context) => 
+      context.findAncestorStateOfType<_MyAppState>()!;
+}
+
+class _MyAppState extends State<MyApp> {
+  late bool _isDarkMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _isDarkMode = widget.isDarkMode;
+  }
+
+  void toggleTheme(bool value) async {
+    setState(() {
+      _isDarkMode = value;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', value);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Application',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.green,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+        ),
       ),
-      home: HomePage(), // La page d'accueil
+      darkTheme: ThemeData.dark().copyWith(
+        primaryColorDark: Colors.green,
+        colorScheme: ColorScheme.dark(
+          primary: Colors.green,
+          secondary: Colors.greenAccent,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+        ),
+      ),
+      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      home: const HomePage(),
     );
   }
 }
 
-
 class HomePage extends StatefulWidget {
+
+  const HomePage({Key? key}) : super(key: key);
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -34,7 +83,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 1;
 
   // Liste des pages de l'application (sans 'const')
-  static List<Widget> _pages = <Widget>[
+  static final List<Widget> _pages = <Widget>[
     HistoryPage(),
     Camera(),  
     SettingsPage(),
@@ -50,9 +99,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Navigation Bottom'),
-      ),
       body: Center(
         child: _pages.elementAt(_selectedIndex),
       ),
@@ -70,7 +116,7 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Paramètre',
+            label: 'Paramètres',
           ),
         ],
       ),
