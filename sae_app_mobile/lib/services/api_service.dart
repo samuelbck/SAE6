@@ -74,8 +74,9 @@ class CameraService {
           'name': resultData['name'],
           'latitude': latitude,
           'longitude': longitude,
-          'prediction_score': (resultData['probability'] * 100).toDouble(),
-          'image': imageBytes,  // Pass the image as Uint8List
+          // un seul chiffre apres la virgule
+          'prediction_score': double.parse((resultData['probability'] * 100).toStringAsFixed(1)),
+          'image': imageBytes,
           'url': resultData['imageUrl'],
           'timestamp': DateTime.now().toIso8601String(),
         },
