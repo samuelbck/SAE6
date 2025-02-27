@@ -13,6 +13,7 @@ class Camera extends StatefulWidget {
 
 class _CameraState extends State<Camera> {
   File? _imageFile;
+
   final CameraService _cameraService = CameraService();
   bool _isLoading = false;
 
@@ -56,7 +57,8 @@ class _CameraState extends State<Camera> {
       );
     }
   }
-Future<void> _uploadPhoto() async {
+
+  Future<void> _uploadPhoto() async {
   if (_imageFile == null) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Aucune photo sélectionnée")),
@@ -70,15 +72,16 @@ Future<void> _uploadPhoto() async {
 
   // Vérification des permissions de localisation
   LocationPermission permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied) {
+  if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
     permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Permission de localisation refusée")),
-      );
+    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
       setState(() {
         _isLoading = false;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Permission de localisation refusée")),
+      );
       return;
     }
   }
@@ -94,12 +97,13 @@ Future<void> _uploadPhoto() async {
   }
 
   if (position == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Impossible d'obtenir la localisation")),
-    );
     setState(() {
       _isLoading = false;
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Impossible d'obtenir la localisation")),
+    );
     return;
   }
 
