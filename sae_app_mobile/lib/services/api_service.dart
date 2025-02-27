@@ -75,7 +75,7 @@ class CameraService {
           'latitude': latitude,
           'longitude': longitude,
           // un seul chiffre apres la virgule
-          'prediction_score': (resultData['probability'] * 100).toDouble(),
+          'prediction_score': resultData['probability'],
           'image': imageBytes,
           'url': resultData['imageUrl'],
           'timestamp': DateTime.now().toIso8601String(),
