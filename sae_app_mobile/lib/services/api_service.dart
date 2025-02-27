@@ -58,7 +58,7 @@ class CameraService {
         var resultData = {
           "imageUrl": responseData['input']['images'][0],
           "name": responseData['result']['classification']['suggestions'][0]['name'],
-          "probability": responseData['result']['classification']['suggestions'][0]['probability'],
+          "probability": double.parse((responseData['result']['classification']['suggestions'][0]['probability'] * 100).toStringAsFixed(1)),
           "latitude": latitude,
           "longitude": longitude,
           "similarImages": List<String>.from(responseData['result']['classification']['suggestions'][0]['similar_images'].map((image) => image['url'])),
@@ -75,7 +75,7 @@ class CameraService {
           'latitude': latitude,
           'longitude': longitude,
           // un seul chiffre apres la virgule
-          'prediction_score': double.parse((resultData['probability'] * 100).toStringAsFixed(1)),
+          'prediction_score': (resultData['probability'] * 100).toDouble(),
           'image': imageBytes,
           'url': resultData['imageUrl'],
           'timestamp': DateTime.now().toIso8601String(),
