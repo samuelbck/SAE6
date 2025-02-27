@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/api_service.dart';
 import 'result_page.dart';
+import 'package:geolocator/geolocator.dart';
 
 class Camera extends StatefulWidget {
   const Camera({Key? key}) : super(key: key);
-
   @override
   _CameraState createState() => _CameraState();
 }
@@ -56,52 +56,91 @@ class _CameraState extends State<Camera> {
       );
     }
   }
+Future<void> _uploadPhoto() async {
+  if (_imageFile == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Aucune photo sélectionnée")),
+    );
+    return;
+  }
 
-  Future<void> _uploadPhoto() async {
-    if (_imageFile != null) {
-      setState(() {
-        _isLoading = true;
-      });
-      var resultData = await _cameraService.uploadPhoto(
-        _imageFile!, 48.289919, 6.941942,
+  setState(() {
+    _isLoading = true;
+  });
+
+  // Vérification des permissions de localisation
+  LocationPermission permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Permission de localisation refusée")),
       );
       setState(() {
         _isLoading = false;
       });
-      if (resultData != null) {
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => ResultPage(
-              imageUrl: resultData['imageUrl'],
-              name: resultData['name'],
-              probability: resultData['probability'],
-              latitude: resultData['latitude'],
-              longitude: resultData['longitude'],
-              similarImages: List<String>.from(resultData['similarImages']),
-            ),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              const begin = Offset(1.0, 0.0);
-              const end = Offset.zero;
-              const curve = Curves.easeInOut;
-              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-              var offsetAnimation = animation.drive(tween);
-
-              return SlideTransition(position: offsetAnimation, child: child);
-            },
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Erreur lors de l'envoi de la photo")),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Aucune photo sélectionnée")),
-      );
+      return;
     }
   }
+
+  Position? position;
+
+  try {
+    position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+  } catch (e) {
+    position = await Geolocator.getLastKnownPosition();
+  }
+
+  if (position == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Impossible d'obtenir la localisation")),
+    );
+    setState(() {
+      _isLoading = false;
+    });
+    return;
+  }
+
+  // Envoi de la photo avec la localisation
+  var resultData = await _cameraService.uploadPhoto(
+    _imageFile!, position.longitude, position.latitude,
+  );
+
+  setState(() {
+    _isLoading = false;
+  });
+
+  if (resultData != null) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => ResultPage(
+          imageUrl: resultData['imageUrl'],
+          name: resultData['name'],
+          probability: resultData['probability'],
+          latitude: resultData['latitude'],
+          longitude: resultData['longitude'],
+          similarImages: List<String>.from(resultData['similarImages']),
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var offsetAnimation = animation.drive(tween);
+
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Erreur lors de l'envoi de la photo")),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
