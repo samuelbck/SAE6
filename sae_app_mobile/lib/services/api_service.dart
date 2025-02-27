@@ -58,7 +58,7 @@ class CameraService {
         var resultData = {
           "imageUrl": responseData['input']['images'][0],
           "name": responseData['result']['classification']['suggestions'][0]['name'],
-          "probability": double.parse((responseData['result']['classification']['suggestions'][0]['probability']).toStringAsFixed(1)),
+          "probability": double.parse((responseData['result']['classification']['suggestions'][0]['probability'] * 100).toStringAsFixed(1)),
           "latitude": latitude,
           "longitude": longitude,
           "similarImages": List<String>.from(responseData['result']['classification']['suggestions'][0]['similar_images'].map((image) => image['url'])),

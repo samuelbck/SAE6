@@ -78,7 +78,7 @@ class ResultPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "Probabilité: ${(probability * 100).toStringAsFixed(2)}%",
+                      "Probabilité: $probability%",
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.green,
