@@ -10,7 +10,7 @@ import 'package:sqflite/sqflite.dart';
 class CameraService {
   final ImagePicker _picker = ImagePicker();
   final String apiUrl = "https://plant.id/api/v3/identification"; 
-  final String apiKey = "QMHLctcWYAUYC8MIDQTJEauRhuUQoEABoBaxvLhtfPGXD1VSOA"; 
+  final String apiKey = dotenv.env['API_KEY'] ?? "";
 
   // Prendre une photo avec la caméra
   Future<File?> takePhoto() async {

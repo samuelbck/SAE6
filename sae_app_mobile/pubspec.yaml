@@ -36,7 +36,7 @@ dependencies:
   sqflite_common_ffi_web: ^0.4.0 # pour le web
   image_picker: ^1.1.2
   http: ^0.13.5
-  flutter_dotenv: ^5.0.2
+  flutter_dotenv: ^5.1.0
   shared_preferences: ^2.0.15
   intl: ^0.17.0
   font_awesome_flutter: ^10.0.0 
