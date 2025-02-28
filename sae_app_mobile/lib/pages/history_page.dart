@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../services/database_service.dart';
 import '../widgets/plant_card.dart';
 
@@ -103,9 +105,14 @@ class _HistoryPageState extends State<HistoryPage> {
                 'Date de la photo: $formattedDate à $formattedTime',
                 style: TextStyle(color: subtitleColor),
               ),
-              Text(
-                'Coordonnées de la photo: ${item['latitude']} ; ${item['longitude']}',
-                style: TextStyle(color: subtitleColor),
+             
+              // Button to open the map dialog
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the details dialog
+                  _showMapDialog(item['latitude'], item['longitude']);
+                },
+                child: const Text('Voir sur la carte'),
               ),
             ],
           ),
@@ -125,13 +132,78 @@ class _HistoryPageState extends State<HistoryPage> {
                   child: const Text('Fermer'),
                 ),
               ],
-            )
+            ),
           ],
         );
       },
     );
   }
 
+void _showMapDialog(double latitude, double longitude) {
+  print("Showing map with coordinates: $latitude, $longitude");
+  
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Expanded(
+                child: FlutterMap(
+                  options: MapOptions(
+                    // CORRECTION ICI: La latitude d'abord, puis la longitude
+                    center: LatLng(longitude, latitude),
+                    zoom: 13.0,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'sae_appa',
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          // CORRECTION ICI AUSSI: La latitude d'abord, puis la longitude
+                          point: LatLng(longitude, latitude),
+                          width: 40,
+                          height: 40,
+                          child: Icon(
+                            Icons.location_on,
+                            color: Colors.red,
+                            size: 40,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  "Position : $latitude, $longitude",
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Fermer'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(

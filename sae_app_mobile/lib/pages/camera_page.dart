@@ -1,3 +1,5 @@
+/// The `Camera` class in Dart is a StatefulWidget that allows users to take photos, select images from
+/// the gallery, and upload photos with location data for processing.
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -13,25 +15,17 @@ class Camera extends StatefulWidget {
 
 class _CameraState extends State<Camera> {
   File? _imageFile;
-
   final CameraService _cameraService = CameraService();
   bool _isLoading = false;
 
-
   Future<void> _takePhoto() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
     File? photo = await _cameraService.takePhoto();
-    if (photo != null) {
-      setState(() {
-        _imageFile = photo;
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
+    setState(() {
+      _imageFile = photo;
+      _isLoading = false;
+    });
+    if (photo == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Erreur lors de la prise de la photo")),
       );
@@ -39,19 +33,13 @@ class _CameraState extends State<Camera> {
   }
 
   Future<void> _pickImageFromGallery() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
     File? photo = await _cameraService.pickImageFromGallery();
-    if (photo != null) {
-      setState(() {
-        _imageFile = photo;
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
+    setState(() {
+      _imageFile = photo;
+      _isLoading = false;
+    });
+    if (photo == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Erreur lors de la sélection de l'image")),
       );
@@ -59,92 +47,69 @@ class _CameraState extends State<Camera> {
   }
 
   Future<void> _uploadPhoto() async {
-  if (_imageFile == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Aucune photo sélectionnée")),
-    );
-    return;
-  }
-
-  setState(() {
-    _isLoading = true;
-  });
-
-  // Vérification des permissions de localisation
-  LocationPermission permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-    permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-      setState(() {
-        _isLoading = false;
-      });
-
+    if (_imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Permission de localisation refusée")),
+        const SnackBar(content: Text("Aucune photo sélectionnée")),
       );
       return;
     }
-  }
+    
+    setState(() => _isLoading = true);
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Permission de localisation refusée")),
+        );
+        return;
+      }
+    }
 
-  Position? position;
+    Position? position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
+      .catchError((_) => Geolocator.getLastKnownPosition());
+    if (position == null) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Impossible d'obtenir la localisation")),
+      );
+      return;
+    }
 
-  try {
-    position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+    var resultData = await _cameraService.uploadPhoto(
+      _imageFile!, position.longitude, position.latitude,
     );
-  } catch (e) {
-    position = await Geolocator.getLastKnownPosition();
-  }
 
-  if (position == null) {
-    setState(() {
-      _isLoading = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Impossible d'obtenir la localisation")),
-    );
-    return;
-  }
-
-  // Envoi de la photo avec la localisation
-  var resultData = await _cameraService.uploadPhoto(
-    _imageFile!, position.longitude, position.latitude,
-  );
-
-  setState(() {
-    _isLoading = false;
-  });
-
-  if (resultData != null) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => ResultPage(
-          imageUrl: resultData['imageUrl'],
-          name: resultData['name'],
-          probability: resultData['probability'],
-          latitude: resultData['latitude'],
-          longitude: resultData['longitude'],
-          similarImages: List<String>.from(resultData['similarImages']),
+    setState(() => _isLoading = false);
+    if (resultData != null) {
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => ResultPage(
+            imageUrl: resultData['imageUrl'],
+            name: resultData['name'],
+            probability: resultData['probability'],
+            latitude: resultData['latitude'],
+            longitude: resultData['longitude'],
+            similarImages: List<String>.from(resultData['similarImages']),
+          ),
+          transitionsBuilder: (_, animation, __, child) {
+            return SlideTransition(
+              position: Tween(begin: Offset(1.0, 0.0), end: Offset.zero)
+                  .chain(CurveTween(curve: Curves.easeInOut))
+                  .animate(animation),
+              child: child,
+            );
+          },
         ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOut;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          var offsetAnimation = animation.drive(tween);
-
-          return SlideTransition(position: offsetAnimation, child: child);
-        },
-      ),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Erreur lors de l'envoi de la photo")),
-    );
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erreur lors de l'envoi de la photo")),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +117,6 @@ class _CameraState extends State<Camera> {
       appBar: AppBar(title: const Text('Prendre une photo')),
       body: Stack(
         children: [
-          // Zone principale avec l'image ou l'icône
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -161,22 +125,36 @@ class _CameraState extends State<Camera> {
                     ? const CircularProgressIndicator()
                     : _imageFile == null
                         ? Column(
-                            children: [
-                              const Icon(
-                                Icons.camera_alt,
-                                size: 100.0,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(height: 20),
-                              const Text('Aucune image sélectionnée.')
+                            children: const [
+                              Icon(Icons.camera_alt, size: 100.0, color: Colors.grey),
+                              SizedBox(height: 20),
+                              Text('Aucune image sélectionnée.')
                             ],
                           )
-                        : Image.file(_imageFile!, width: 300, height: 300, fit: BoxFit.cover),
+                        : Container(
+                            width: 300,
+                            height: 300,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.green, width: 5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                  offset: Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Image.file(_imageFile!, fit: BoxFit.cover),
+                            ),
+                          ),
                 const SizedBox(height: 20),
               ],
             ),
           ),
-          // Alignement des boutons horizontalement en bas
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -194,7 +172,7 @@ class _CameraState extends State<Camera> {
                     onPressed: _pickImageFromGallery,
                     icon: const FaIcon(FontAwesomeIcons.images),
                     iconSize: 40.0,
-                    color:Colors.green,
+                    color: Colors.green,
                   ),
                   IconButton(
                     onPressed: _uploadPhoto,
