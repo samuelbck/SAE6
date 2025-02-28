@@ -54,7 +54,8 @@ class DatabaseService {
       )
     ''');
 
-    await _insertInitialData(db);
+    // on désactive l'insertion initiale : uniquement pour les tests
+    //await _insertInitialData(db);
   }
 
   Future<void> _insertInitialData(Database db) async {
