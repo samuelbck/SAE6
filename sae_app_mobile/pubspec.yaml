@@ -43,6 +43,7 @@ dependencies:
   collection: ^1.17.0
   geolocator: ^8.2.0
   geocoding: ^2.0.4
+  google_maps_flutter: ^2.5.0  # Dernière version à vérifier sur pub.dev
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
